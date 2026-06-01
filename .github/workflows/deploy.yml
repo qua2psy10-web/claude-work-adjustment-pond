@@ -25,14 +25,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: Documents/Claude/work-adjustment-pond/package-lock.json
       - run: npm ci
-        working-directory: Documents/Claude/work-adjustment-pond
       - run: npm run build
-        working-directory: Documents/Claude/work-adjustment-pond
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: Documents/Claude/work-adjustment-pond/dist
+          path: dist
       - uses: actions/deploy-pages@v4
         id: deployment
