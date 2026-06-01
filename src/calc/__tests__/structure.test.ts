@@ -32,23 +32,27 @@ describe('calcPoolVolume', () => {
 
 describe('calcStructureResult', () => {
   it('実容量が必要貯留量以上ならisCapacityOkがtrueになる', () => {
+    // 10m × 30m × 水深1m = 300m³ ≥ 必要200m³
     const result = calcStructureResult({
       shape: 'rectangular',
       bottomWidthM: 10,
       poolLengthM: 30,
+      waterDepthM: 1.0,
       slopeRatio: 0,
       freeboardM: 0.3,
       requiredStorageM3: 200,
     })
     expect(result.isCapacityOk).toBe(true)
-    expect(result.actualVolumeM3).toBeGreaterThanOrEqual(200)
+    expect(result.actualVolumeM3).toBe(300)
   })
 
   it('実容量が必要貯留量未満ならisCapacityOkがfalseになる', () => {
+    // 2m × 5m × 水深1m = 10m³ < 必要10000m³
     const result = calcStructureResult({
       shape: 'rectangular',
       bottomWidthM: 2,
       poolLengthM: 5,
+      waterDepthM: 1.0,
       slopeRatio: 0,
       freeboardM: 0.3,
       requiredStorageM3: 10000,
