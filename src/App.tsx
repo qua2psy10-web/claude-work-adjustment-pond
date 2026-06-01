@@ -27,6 +27,7 @@ const defaultState: AppState = {
     shape: 'trapezoidal',
     bottomWidthM: 5,
     poolLengthM: 20,
+    waterDepthM: 2.0,
     slopeRatio: 1.5,
     lining: 'concrete',
     freeboardM: 0.3,

@@ -37,6 +37,7 @@ export interface StructureInput {
   shape: PoolShape
   bottomWidthM: number     // 池底幅 (m)
   poolLengthM: number      // 池長 (m)
+  waterDepthM: number      // 設計水深 (m)
   slopeRatio: number       // 法面勾配 n（1:n）
   lining: SlopeLiningType
   freeboardM: number       // 余裕高 (m)

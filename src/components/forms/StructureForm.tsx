@@ -38,6 +38,12 @@ export function StructureForm({ value, result, requiredStorageM3, onChange }: Pr
               onChange={(e) => set('poolLengthM', parseFloat(e.target.value) || 0)}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">設計水深 (m)</label>
+            <input type="number" min={0.1} step={0.1} value={value.waterDepthM}
+              onChange={(e) => set('waterDepthM', parseFloat(e.target.value) || 0)}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
+          </div>
           {value.shape === 'trapezoidal' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">法面勾配 (1:n)</label>

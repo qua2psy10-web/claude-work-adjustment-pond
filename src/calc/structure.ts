@@ -24,6 +24,7 @@ interface StructureInputCalc {
   shape: PoolShape
   bottomWidthM: number
   poolLengthM: number
+  waterDepthM: number
   slopeRatio: number
   freeboardM: number
   requiredStorageM3: number
@@ -38,22 +39,10 @@ export interface StructureCalcResult {
 }
 
 // 構造設計の計算結果をまとめて返す
-// 設計水深は実容量 ≥ 必要貯留量 となるように池寸法から逆算せず、
-// 入力された寸法から実容量を計算し判定する。
-// （設計者が寸法を調整しながら使うフロー）
+// 設計者が寸法（幅・長さ・水深）を入力 → 実容量を計算 → 必要貯留量と比較
 export function calcStructureResult(params: StructureInputCalc): StructureCalcResult {
-  const { shape, bottomWidthM, poolLengthM, slopeRatio, freeboardM, requiredStorageM3 } = params
+  const { shape, bottomWidthM, poolLengthM, waterDepthM, slopeRatio, freeboardM, requiredStorageM3 } = params
 
-  // 設計水深は合理的な値を逆算: 実容量が必要貯留量と等しくなる水深を2分探索
-  // ただし最大水深を10mに制限
-  let lo = 0.01, hi = 10.0
-  for (let i = 0; i < 50; i++) {
-    const mid = (lo + hi) / 2
-    const v = calcPoolVolume({ shape, bottomWidthM, poolLengthM, slopeRatio, waterDepthM: mid })
-    if (v < requiredStorageM3) lo = mid
-    else hi = mid
-  }
-  const waterDepthM = (lo + hi) / 2
   const actualVolumeM3 = calcPoolVolume({ shape, bottomWidthM, poolLengthM, slopeRatio, waterDepthM })
   const topWidthM = shape === 'rectangular'
     ? bottomWidthM
@@ -62,9 +51,9 @@ export function calcStructureResult(params: StructureInputCalc): StructureCalcRe
 
   return {
     actualVolumeM3: Math.round(actualVolumeM3),
-    waterDepthM: Math.round(waterDepthM * 100) / 100,
+    waterDepthM,
     totalDepthM: Math.round(totalDepthM * 100) / 100,
     topWidthM: Math.round(topWidthM * 100) / 100,
-    isCapacityOk: actualVolumeM3 >= requiredStorageM3,
+    isCapacityOk: Math.round(actualVolumeM3) >= requiredStorageM3,
   }
 }
