@@ -1,12 +1,27 @@
 import {
-  Document, Page, Text, View, StyleSheet,
+  Document, Page, Text, View, StyleSheet, Font,
 } from '@react-pdf/renderer'
 import type { AppState, HydrologyResult } from '../types'
 import type { StructureCalcResult } from '../calc/structure'
 import type { DischargeCalcResult } from '../calc/discharge'
 
+// Noto Sans JP（Google Fonts CDN）で日本語フォントを登録
+Font.register({
+  family: 'NotoSansJP',
+  fonts: [
+    {
+      src: 'https://fonts.gstatic.com/s/notosansjp/v53/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEi75vY0rw-oME.ttf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/notosansjp/v53/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFJGj75vY0rw-oME.ttf',
+      fontWeight: 'bold',
+    },
+  ],
+})
+
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#111' },
+  page: { padding: 40, fontSize: 10, fontFamily: 'NotoSansJP', color: '#111' },
   coverTitle: { fontSize: 20, textAlign: 'center', marginTop: 100, marginBottom: 20 },
   coverSub: { fontSize: 12, textAlign: 'center', color: '#555', marginBottom: 8 },
   sectionTitle: { fontSize: 12, fontWeight: 'bold', marginTop: 16, marginBottom: 6,
