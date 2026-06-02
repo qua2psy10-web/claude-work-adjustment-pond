@@ -5,18 +5,13 @@ import type { AppState, HydrologyResult } from '../types'
 import type { StructureCalcResult } from '../calc/structure'
 import type { DischargeCalcResult } from '../calc/discharge'
 
-// Noto Sans JP（Google Fonts CDN）で日本語フォントを登録
+// Noto Sans JP（publicディレクトリにバンドル）で日本語フォントを登録
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
 Font.register({
   family: 'NotoSansJP',
   fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/notosansjp/v53/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEi75vY0rw-oME.ttf',
-      fontWeight: 'normal',
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/notosansjp/v53/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFJGj75vY0rw-oME.ttf',
-      fontWeight: 'bold',
-    },
+    { src: `${base}/fonts/NotoSansJP-Regular.ttf`, fontWeight: 'normal' },
+    { src: `${base}/fonts/NotoSansJP-Bold.ttf`, fontWeight: 'bold' },
   ],
 })
 
