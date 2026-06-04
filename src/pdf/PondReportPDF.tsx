@@ -28,7 +28,8 @@ const styles = StyleSheet.create({
   cellUnit: { flex: 1, padding: 4 },
   ngText: { color: '#dc2626' },
   okText: { color: '#16a34a' },
-  formula: { fontFamily: 'Courier', fontSize: 9, backgroundColor: '#f9fafb', padding: 4, marginBottom: 4 },
+  formula: { fontFamily: 'NotoSansJP', fontSize: 9, backgroundColor: '#f9fafb', padding: 6, marginBottom: 6, lineHeight: 1.8 },
+  formulaLine: { marginBottom: 2 },
 })
 
 interface Props {
@@ -88,11 +89,11 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
       {/* 水文計算 */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.sectionTitle}>2. 水文計算</Text>
-        <Text style={styles.formula}>
-          降雨強度式（Talbot型）: r = a / (t + b)^n{'\n'}
-          合理式: Q = (1/360) × C × r × A{'\n'}
-          必要貯留量: V = max[(Q(t) - Q_allow) × t × 60]
-        </Text>
+        <View style={styles.formula}>
+          <Text style={styles.formulaLine}>降雨強度式（Talbot型）: r = a / (t + b)^n</Text>
+          <Text style={styles.formulaLine}>合理式: Q = (1/360) x C x r x A</Text>
+          <Text style={styles.formulaLine}>必要貯留量: V = max[(Q(t) - Q_allow) x t x 60]</Text>
+        </View>
         {hydrologyResult ? (
           <View style={styles.table}>
             <TableRow label="到達時間" value={String(hydrologyInput.concentrationTimeMin)} unit="分" />
@@ -136,10 +137,10 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
       {/* 放流設備 */}
       <Page size="A4" style={styles.page}>
         <Text style={styles.sectionTitle}>4. 放流設備設計</Text>
-        <Text style={styles.formula}>
-          オリフィス: Q = C × A × √(2gH)  (C=0.6){'\n'}
-          越流堰: Q = C × L × H^(3/2)  (C=1.6)
-        </Text>
+        <View style={styles.formula}>
+          <Text style={styles.formulaLine}>オリフィス: Q = C x A x √(2gH)  (C=0.6)</Text>
+          <Text style={styles.formulaLine}>越流堰: Q = C x L x H^(3/2)  (C=1.6)</Text>
+        </View>
         {dischargeResult ? (
           <>
             <View style={styles.table}>
