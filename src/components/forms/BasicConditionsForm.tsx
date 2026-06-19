@@ -44,6 +44,7 @@ export function BasicConditionsForm({ value, standard, onChange }: Props) {
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           >
             <option value="ibaraki">茨城県</option>
+            <option value="chiba">千葉県</option>
           </select>
         </div>
         <div>

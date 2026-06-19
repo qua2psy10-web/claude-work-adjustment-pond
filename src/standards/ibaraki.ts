@@ -1,4 +1,5 @@
 import type { PrefectureStandard } from './index'
+import { chibaStandard } from './chiba'
 
 // 出典: 茨城県土木部「雨水排水施設設計基準」
 // Talbot型: r = a / (t + b)^n
@@ -29,4 +30,5 @@ export const ibarakiStandard: PrefectureStandard = {
 
 export const prefectureStandards: Record<string, PrefectureStandard> = {
   ibaraki: ibarakiStandard,
+  chiba:   chibaStandard,
 }
