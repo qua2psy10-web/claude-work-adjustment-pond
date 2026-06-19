@@ -4,6 +4,7 @@ import {
 import type { AppState, HydrologyResult } from '../types'
 import type { StructureCalcResult } from '../calc/structure'
 import type { DischargeCalcResult } from '../calc/discharge'
+import { prefectureStandards } from '../standards/ibaraki'
 
 // Noto Sans JP（publicディレクトリにバンドル）で日本語フォントを登録
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
@@ -62,6 +63,7 @@ const LAND_USE_LABELS: Record<string, string> = {
 
 export function PondReportPDF({ state, hydrologyResult, structureResult, dischargeResult }: Props) {
   const { basic, hydrologyInput, structureInput, dischargeInput } = state
+  const prefectureName = prefectureStandards[basic.prefecture]?.name ?? basic.prefecture
 
   return (
     <Document>
@@ -69,7 +71,7 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
       <Page size="A4" style={styles.page}>
         <Text style={styles.coverTitle}>防災調整池 設計計算書</Text>
         <Text style={styles.coverSub}>{basic.projectName || '（案件名未入力）'}</Text>
-        <Text style={styles.coverSub}>茨城県 確率年 {basic.returnPeriodYears} 年</Text>
+        <Text style={styles.coverSub}>{prefectureName} 確率年 {basic.returnPeriodYears} 年</Text>
         <Text style={[styles.coverSub, { marginTop: 40 }]}>作成日: {new Date().toLocaleDateString('ja-JP')}</Text>
       </Page>
 
@@ -78,7 +80,7 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
         <Text style={styles.sectionTitle}>1. 設計条件</Text>
         <View style={styles.table}>
           <TableRow label="案件名" value={basic.projectName || '未入力'} unit="" />
-          <TableRow label="都道府県" value="茨城県" unit="" />
+          <TableRow label="都道府県" value={prefectureName} unit="" />
           <TableRow label="計画確率年" value={String(basic.returnPeriodYears)} unit="年" />
           <TableRow label="流域面積" value={String(basic.basinAreaHa)} unit="ha" />
           <TableRow label="土地利用区分" value={LAND_USE_LABELS[basic.landUse] ?? basic.landUse} unit="" />
@@ -121,11 +123,14 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
               <TableRow label="設計水深" value={String(structureResult.waterDepthM)} unit="m" />
               <TableRow label="全深" value={String(structureResult.totalDepthM)} unit="m" />
               <TableRow label="天端幅" value={String(structureResult.topWidthM)} unit="m" />
+              <TableRow label="必要貯留量 V" value={hydrologyResult ? hydrologyResult.requiredStorageM3.toLocaleString() : '─'} unit="m³" />
               <TableRow label="実容量" value={structureResult.actualVolumeM3.toLocaleString()} unit="m³" />
             </View>
             <View style={{ marginTop: 8 }}>
               <Text style={structureResult.isCapacityOk ? styles.okText : styles.ngText}>
-                判定: {structureResult.isCapacityOk ? '✓ OK（実容量 ≥ 必要貯留量）' : '✗ NG（容量不足）'}
+                判定: {structureResult.isCapacityOk
+                  ? `✓ OK（実容量 ${structureResult.actualVolumeM3.toLocaleString()} m³ ≥ 必要貯留量 ${hydrologyResult ? hydrologyResult.requiredStorageM3.toLocaleString() : '─'} m³）`
+                  : `✗ NG（実容量 ${structureResult.actualVolumeM3.toLocaleString()} m³ ＜ 必要貯留量 ${hydrologyResult ? hydrologyResult.requiredStorageM3.toLocaleString() : '─'} m³・容量不足）`}
               </Text>
             </View>
           </>
