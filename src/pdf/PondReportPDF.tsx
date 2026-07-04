@@ -6,6 +6,7 @@ import type { StructureCalcResult } from '../calc/structure'
 import type { DischargeCalcResult } from '../calc/discharge'
 import { prefectureStandards } from '../standards/ibaraki'
 import { calcRainfallIntensity, calcPeakFlow } from '../calc/hydrology'
+import { XYChart, PondSection } from './charts'
 
 // Noto Sans JP（publicディレクトリにバンドル）で日本語フォントを登録
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
@@ -156,6 +157,16 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
       })
     : []
 
+  // グラフ描画用の細かい刻み（10分刻み）の曲線データ
+  const curveRows = coeff
+    ? Array.from({ length: 36 }, (_, i) => (i + 1) * 10).map((t) => {
+        const r = calcRainfallIntensity(t, basic.returnPeriodYears, standard)
+        const q = calcPeakFlow(runoffC, r, basic.basinAreaHa)
+        const v = Math.max(0, (q - basic.allowableDischargeM3s) * t * 60)
+        return { t, q, v }
+      })
+    : []
+
   const shapeLabel = structureInput.shape === 'rectangular' ? '矩形' : '台形'
   const dischargeTypeLabel =
     dischargeInput.type === 'orifice' ? 'オリフィス'
@@ -187,11 +198,12 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
         <View style={styles.tocRow}><Text style={styles.tocSection}>1.2 基本条件</Text><Text style={styles.tocPage}>1</Text></View>
         <View style={styles.tocRow}><Text style={styles.tocChapter}>2章 流域</Text><Text style={styles.tocPage}>2</Text></View>
         <View style={styles.tocRow}><Text style={styles.tocSection}>2.1 流域条件及び必要調節容量</Text><Text style={styles.tocPage}>2</Text></View>
-        <View style={styles.tocRow}><Text style={styles.tocChapter}>3章 貯留施設</Text><Text style={styles.tocPage}>3</Text></View>
-        <View style={styles.tocRow}><Text style={styles.tocSection}>3.1 貯留施設の容量</Text><Text style={styles.tocPage}>3</Text></View>
-        <View style={styles.tocRow}><Text style={styles.tocChapter}>4章 放流施設</Text><Text style={styles.tocPage}>4</Text></View>
-        <View style={styles.tocRow}><Text style={styles.tocSection}>4.1 放流量計算</Text><Text style={styles.tocPage}>4</Text></View>
-        <View style={styles.tocRow}><Text style={styles.tocChapter}>5章 総括表</Text><Text style={styles.tocPage}>5</Text></View>
+        <View style={styles.tocRow}><Text style={styles.tocSection}>2.2 ハイドログラフ及び貯留量曲線</Text><Text style={styles.tocPage}>3</Text></View>
+        <View style={styles.tocRow}><Text style={styles.tocChapter}>3章 貯留施設</Text><Text style={styles.tocPage}>4</Text></View>
+        <View style={styles.tocRow}><Text style={styles.tocSection}>3.1 貯留施設の容量</Text><Text style={styles.tocPage}>4</Text></View>
+        <View style={styles.tocRow}><Text style={styles.tocChapter}>4章 放流施設</Text><Text style={styles.tocPage}>5</Text></View>
+        <View style={styles.tocRow}><Text style={styles.tocSection}>4.1 放流量計算</Text><Text style={styles.tocPage}>5</Text></View>
+        <View style={styles.tocRow}><Text style={styles.tocChapter}>5章 総括表</Text><Text style={styles.tocPage}>6</Text></View>
       </Page>
 
       {/* ============ 1章 設計条件 ============ */}
@@ -293,9 +305,66 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
         )}
       </Page>
 
-      {/* ============ 3章 貯留施設 ============ */}
+      {/* ============ 2.2 ハイドログラフ・貯留量曲線 ============ */}
       <Page size="A4" style={styles.page}>
         <PageChrome pageNo={3} />
+        <Text style={styles.sectionTitle}>2.2 ハイドログラフ及び貯留量曲線</Text>
+
+        <Text style={styles.clause}>1) 流入量曲線（ハイドログラフ）</Text>
+        {curveRows.length > 0 ? (
+          <>
+            <XYChart
+              xMax={360}
+              xStep={60}
+              xLabel="継続時間 t (min)"
+              yLabel="流量 (m³/s)"
+              yFmt={(v) => v.toFixed(2)}
+              series={[
+                { label: '流入量 Q(t)', points: curveRows.map(({ t, q }) => ({ x: t, y: q })) },
+                {
+                  label: '許容放流量 Qa',
+                  points: [{ x: 0, y: basic.allowableDischargeM3s }, { x: 360, y: basic.allowableDischargeM3s }],
+                  dashed: true,
+                },
+              ]}
+              legendPos="tr"
+            />
+            <Text style={[styles.calcLine, { marginLeft: 14, marginBottom: 8 }]}>
+              流入量 Q(t) と許容放流量 Qa の差が調節池による調節量となる。
+            </Text>
+
+            <Text style={styles.clause}>2) 必要調節容量曲線</Text>
+            <XYChart
+              xMax={360}
+              xStep={60}
+              xLabel="継続時間 t (min)"
+              yLabel="貯留量 (m³)"
+              yFmt={(v) => Math.round(v).toLocaleString()}
+              series={[
+                { label: '貯留量 V(t)', points: curveRows.map(({ t, v }) => ({ x: t, y: v })) },
+              ]}
+              marker={hydrologyResult ? {
+                x: hydrologyResult.criticalDurationMin,
+                y: hydrologyResult.requiredStorageM3,
+                label: `Vmax = ${fi(hydrologyResult.requiredStorageM3)} m³ (t = ${hydrologyResult.criticalDurationMin} min)`,
+              } : undefined}
+              legendPos="tl"
+            />
+            {hydrologyResult && (
+              <Text style={[styles.calcLine, { marginLeft: 14 }]}>
+                貯留量 V(t) は継続時間 t = {hydrologyResult.criticalDurationMin} (min) で最大となり、
+                必要調節容量 V = {fi(hydrologyResult.requiredStorageM3)} (m³) を得る。
+              </Text>
+            )}
+          </>
+        ) : (
+          <Text style={styles.clause}>※ 降雨強度式が未設定のためグラフを描画できません。</Text>
+        )}
+      </Page>
+
+      {/* ============ 3章 貯留施設 ============ */}
+      <Page size="A4" style={styles.page}>
+        <PageChrome pageNo={4} />
         <Text style={styles.chapterTitle}>3章 貯留施設</Text>
         <Text style={styles.sectionTitle}>3.1 貯留施設の容量</Text>
 
@@ -309,9 +378,18 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
           <KVRow label="余裕高 (m)" value={f2(structureInput.freeboardM)} last />
         </View>
 
+        <Text style={styles.clause}>2) 断面図</Text>
+        <PondSection
+          shape={structureInput.shape}
+          bottomWidthM={structureInput.bottomWidthM}
+          slopeRatio={structureInput.slopeRatio}
+          waterDepthM={structureInput.waterDepthM}
+          freeboardM={structureInput.freeboardM}
+        />
+
         {structureResult ? (
           <>
-            <Text style={styles.clause}>2) 容量計算</Text>
+            <Text style={styles.clause}>3) 容量計算</Text>
             <View style={styles.calcBlock}>
               {structureInput.shape === 'rectangular' ? (
                 <>
@@ -339,7 +417,7 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
               </Text>
             </View>
 
-            <Text style={styles.clause}>3) 容量の判定</Text>
+            <Text style={styles.clause}>4) 容量の判定</Text>
             <View style={styles.table}>
               <ItemHeader />
               <ItemRow item="必要調節容量 V" unit="m³" value={hydrologyResult ? fi(hydrologyResult.requiredStorageM3) : '－'} />
@@ -369,7 +447,7 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
 
       {/* ============ 4章 放流施設 ============ */}
       <Page size="A4" style={styles.page}>
-        <PageChrome pageNo={4} />
+        <PageChrome pageNo={5} />
         <Text style={styles.chapterTitle}>4章 放流施設</Text>
         <Text style={styles.sectionTitle}>4.1 放流量計算</Text>
 
@@ -443,7 +521,7 @@ export function PondReportPDF({ state, hydrologyResult, structureResult, dischar
 
       {/* ============ 5章 総括表 ============ */}
       <Page size="A4" style={styles.page}>
-        <PageChrome pageNo={5} />
+        <PageChrome pageNo={6} />
         <Text style={styles.chapterTitle}>5章 総括表</Text>
         <Text style={styles.sectionTitle}>5.1 {basic.projectName || '（案件名未入力）'}</Text>
 
